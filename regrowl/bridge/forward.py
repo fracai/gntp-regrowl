@@ -28,7 +28,11 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['GrowlForwarder']
 
-prowl_provider_key = "189853fa49a4fe6cba6e9c671617b566152cd10c"
+provider_key = {
+    'nma':None,
+    'prowl':"189853fa49a4fe6cba6e9c671617b566152cd10c",
+    'pushover':None,
+    }
 
 class GrowlForwarder(ReGrowler):
     key = __name__
@@ -61,15 +65,18 @@ class GrowlForwarder(ReGrowler):
                 except Exception, e:
                     logger.info("Network error while Forwarding to " + destination[0] + " destination " + destination[1] + ":" + destination[2] + ":")
                     logger.info(e)
-            elif destination[0] == "prowl":
-                logger.info("Forwarding to " + destination[0] + " destination, API Key: " + destination[1])
-                client = pushnotify.get_client('prowl', developerkey=prowl_provider_key, application=packet.headers.get('Application-Name'))
-                client.add_key(destination[1])
-                try:
-                    client.notify(description = packet.headers.get('Notification-Text'), event = packet.headers.get('Notification-Title'))
-                except Exception, e:
-                    logger.info("Prowl error while forwarding to " + destination[0] + " destination, API Key: " + destination[1] + ":")
-                    logger.info(e)
+            elif destination[0] in ["nma", "prowl", "pushover"]:
+                if provider_key[destination[0]]:
+                    logger.info("Forwarding to " + destination[0] + " destination, API Key: " + destination[1])
+                    client = pushnotify.get_client(destination[0], developerkey=provider_key[destination[0]], application=packet.headers.get('Application-Name'))
+                    client.add_key(destination[1])
+                    try:
+                        client.notify(description = packet.headers.get('Notification-Text'), event = packet.headers.get('Notification-Title'))
+                    except Exception, e:
+                        logger.info("error while forwarding to " + destination[0] + " destination, API Key: " + destination[1] + ":")
+                        logger.info(e)
+                else:
+                    logger.info("error while forwarding to " + destination[0] + " destination, no developer key")
             else:
                 logger.error("Invalid forwarding destination type: " + destination[0])
 
