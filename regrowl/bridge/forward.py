@@ -62,11 +62,11 @@ class GrowlForwarder(ReGrowler):
                     packet.info['encryptionAlgorithmID'] = "NONE"
                     packet.add_header(
                         "Received", 
-                        "From %(source)s by %(receiver)s [with Growl] [id %(identifier)s]; %(date)s" % 
+                        "From %(source)s by %(receiver)s with Growl id %(identifier)s; %(date)s" % 
                         {
                             'source':packet.headers.get('Origin-Machine-Name'),
                             'receiver':socket.gethostname(),
-                            'identifier':'id',
+                            'identifier':packet.message_id,
                             'date':time.strftime("%Y-%m-%d %H:%M:%SZ",time.gmtime())
                         }
                         )
