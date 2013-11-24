@@ -78,6 +78,8 @@ def main():
     (options, remaining_args) = conf_parser.parse_known_args()
     if options.config_path is not None:
         conf_parser.config.read(options.config_path)
+    else:
+        options.config_path = CONFIG_PATH
 
     parser = ParserWithConfig(
         config=options.config_path, 
@@ -127,6 +129,8 @@ def main():
 
     (options, args) = parser.parse_known_args(remaining_args)
     options.verbose = logging.WARNING - options.verbose * 10
+    if options.debug:
+        options.verbose = logging.DEBUG
 
     try:
         import setproctitle

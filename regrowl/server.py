@@ -55,12 +55,15 @@ class GNTPHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         self.hostaddr, self.port = self.request.getsockname()
-        logger.info('Handling request from %s:%s', self.hostaddr, self.port)
+        self.srcaddr, self.srcport = self.client_address
+        logger.info('Handling request from %s:%s', self.srcaddr, self.srcport)
 
         self.data = self.read()
 
         try:
             message = parse_gntp(self.data, self.server.options.password)
+            self.server.message_count += 1
+            message.message_id = self.server.message_count
 
             response = GNTPOK(action=message.info['messagetype'])
             add_origin_info(response)
@@ -83,7 +86,7 @@ class GNTPHandler(SocketServer.StreamRequestHandler):
             self.server.notifiers = load_bridges(self.server.config)
 
         for bridge in self.server.notifiers:
-            bridge(self.server.config, message, self.hostaddr, self.port)
+            bridge(self.server.config, message, self.srcaddr, self.srcport)
 
 
 class GNTPServer(SocketServer.TCPServer):
@@ -98,6 +101,7 @@ class GNTPServer(SocketServer.TCPServer):
         self.config = config
         self.options = options
         self.notifiers = load_bridges(self.config)
+        self.message_count = 0
 
     def run(self):
         logger.info('Starting Server')
